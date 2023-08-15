@@ -1,5 +1,13 @@
 from socket import *
 
+from important.file_config import config
+config_info=config()
+
+cache_time=config_info["cache_time"]
+whitelist=config_info["whitelist"]
+time_in=config_info["time_in"]
+time_out=config_info["time_out"]
+
 #Hàm để kiểm tra phương thức
 def is_valid_method(method):
     if method != 'GET' and method != 'POST' and method != 'HEAD':
