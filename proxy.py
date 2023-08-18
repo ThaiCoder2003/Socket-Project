@@ -11,7 +11,9 @@ whitelist=config_info["whitelist"]
 time_in=config_info["time_in"]
 time_out=config_info["time_out"]
 
-
+# Hàm kiểm tra whitelist
+def isWhite(input_str):
+    return input_str in whitelist
 
 #Hàm để kiểm tra phương thức
 def is_valid_method(method):
