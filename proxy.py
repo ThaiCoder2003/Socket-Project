@@ -1,15 +1,23 @@
 from socket import *
-from zlib import *
 import os
 from datetime import datetime
 
 def config():
     config={}
 
-    config["cache_time"]=900
-    config["whitelist"]=["oosc.online", "example.com", "google.com", "bing.com", "testphp.vulnweb.com/login.php", "vbsca.ca/login/login.asp", "vbsca.ca/login", "vbsca.ca/login/LoginsAndPermissions3.htm"]
-    config["time_in"]=8
-    config["time_out"]=20
+    with open('config/file.conf', 'r') as f:
+        data = f.readlines()
+    for i in range(len(data)):
+        if data[i][-1] == '\n':
+            data[i] = data[i][:-1]
+        data[i] = data[i].split(' = ')
+        if i == 1:
+            data[i][1] = data[i][1].split(', ')
+
+    config[data[0][0]]= int(data[0][1])
+    config[data[1][0]]= data[1][1]
+    config[data[2][0]]= int(data[2][1])
+    config[data[3][0]]= int(data[3][1])
 
     return config
 
@@ -21,7 +29,7 @@ def TimeLimit():
 config_info=config()
 
 cache_time=config_info["cache_time"]
-whitelist=config_info["whitelist"]
+whitelist=config_info["whitelisting"]
 time_in=config_info["time_in"]
 time_out=config_info["time_out"]
 
@@ -97,6 +105,7 @@ def saveCache(request, response, target_host):
             with open(img_name, 'wb') as f:
                 # Tiến hành ghi dữ liệu vào tệp ảnh
                 f.write(response[idx:])
+        print('Lưu cache thành công')
 
 def load_cache(request, target_host, tcpClientSock):
     #Điều tra request
@@ -115,9 +124,8 @@ def load_cache(request, target_host, tcpClientSock):
                 img = f.read()
             #Gửi ảnh từ proxy
             response = http_ver.encode() + b'200 OK\r\nContent_type: image/' + extension.encode() + b'\r\n\r\n' + img
-            print(f'RESPONSE:\n{response}')
             tcpClientSock.send(response)
-            print(f'Tải ảnh {img_name} thành công')
+            print(f'Tải ảnh {img_name} từ cache thành công')
             return True
     return False
 
@@ -126,8 +134,14 @@ def check_forbidden(request):
     #test phương thức
     method = is_valid_method(request_splited[0])
     #test white list
-    temp = request_splited[1].split('/')
-    white = isWhite(temp[1])
+    if request_splited[1][-1] == '/':
+        temp = request_splited[1][1:-1]
+    else:
+        temp = request_splited[1][1:]
+    if request_splited[0] == 'POST':
+        white = True
+    else:
+        white = isWhite(temp)
     #test time
     time = TimeLimit()
 
@@ -146,3 +160,5 @@ def send_forbidden(request, tcpClientSock):
     response = http_ver.encode() + b' 200 OK\r\nContent-Type: text/html\r\n\r\n' + html
 
     tcpClientSock.sendall(response)
+
+config()

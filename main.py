@@ -1,12 +1,9 @@
 from proxy import *
-from socket import *
-
 
 IP = '127.0.0.1'
 PORT = 31103
 ADDR = (IP, PORT)
 TARGET_PORT = 80 #http: 80
-
 
 #Mở socket tại proxy
 tcpSerSock = socket(AF_INET, SOCK_STREAM)
@@ -16,6 +13,7 @@ i = 0
 target_host = ''
 tcpSerSock.listen()
 run = True
+
 while run:
     try:
         print('Proxy server is listening on', ADDR)
@@ -51,4 +49,8 @@ while run:
     except KeyboardInterrupt:
         tcpSerSock.close()
         print('CLOSE')
+        run = False
+    except:
+        tcpSerSock.close()
+        print('CLOSE!!!')
         run = False
