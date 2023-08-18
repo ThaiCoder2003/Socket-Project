@@ -51,13 +51,6 @@ def create_proxy_request(request, target_host):
     request_splited[3] = request_splited[3].replace('127.0.0.1:31103', target_host)
     return ' '.join(request_splited), target_host
 
-def unzip(response):
-    idx = response.find(b'\x1f')
-    if idx != -1:
-        gzip = response[idx:]
-        response = response[:idx] + decompress(gzip, MAX_WBITS | 16)
-    return response
-
 def isImage(request, response):
     response_splited = response.split(b'\r\n')
     
