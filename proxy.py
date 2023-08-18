@@ -1,9 +1,23 @@
 from socket import *
 from zlib import *
 import os
+from datetime import datetime
 
-from important.file_config import config
-from important.time_constraint import TimeLimit
+def config():
+    config={}
+
+    config["cache_time"]=900
+    config["whitelist"]=["oosc.online", "example.com", "google.com", "bing.com", "testphp.vulnweb.com/login.php", "vbsca.ca/login/login.asp", "vbsca.ca/login", "vbsca.ca/login/LoginsAndPermissions3.htm"]
+    config["time_in"]=8
+    config["time_out"]=20
+
+    return config
+
+def TimeLimit():
+    currentDateAndTime = datetime.now()
+    float=currentDateAndTime.hour+currentDateAndTime.minute/60
+    return (float>=config_info['time_in'] and float<=config_info['time_out'])
+
 config_info=config()
 
 cache_time=config_info["cache_time"]
@@ -72,10 +86,12 @@ def saveCache(request, response, target_host):
     if idx == None:
         pass
     else:
+        #Tạo path cho ảnh
         request_splited = request.split()
         path_img = request_splited[1].split('/')
         img_name = path_img[-1]
         img_name = target_host+'/'+img_name
+        #Lưu ảnh nếu chưa tồn tại
         if not os.path.exists(img_name):
             os.makedirs(target_host, exist_ok = True)
             with open(img_name, 'wb') as f:
@@ -83,6 +99,7 @@ def saveCache(request, response, target_host):
                 f.write(response[idx:])
 
 def load_cache(request, target_host, tcpClientSock):
+    #Điều tra request
     request_splited = request.split()
     http_ver = request_splited[2].split('\r\n')[0]
     path_img = request_splited[1].split('/')
@@ -93,10 +110,39 @@ def load_cache(request, target_host, tcpClientSock):
     if img_name.find('png') != -1 or img_name.find('jpg') != -1 or img_name.find('jpeg') != -1:
         extension = img_name.split('.')[-1]
         if os.path.exists(img_name):
+            #Lấy ảnh từ cache
             with open(img_name, 'rb') as f:
                 img = f.read()
+            #Gửi ảnh từ proxy
             response = http_ver.encode() + b'200 OK\r\nContent_type: image/' + extension.encode() + b'\r\n\r\n' + img
             print(f'RESPONSE:\n{response}')
             tcpClientSock.send(response)
+            print(f'Tải ảnh {img_name} thành công')
             return True
     return False
+
+def check_forbidden(request):
+    request_splited = request.split()
+    #test phương thức
+    method = is_valid_method(request_splited[0])
+    #test white list
+    temp = request_splited[1].split('/')
+    white = isWhite(temp[1])
+    #test time
+    time = TimeLimit()
+
+    if request.find('same-origin') != -1:
+        return True
+
+    if method and white and time:
+        return True
+    return False
+
+def send_forbidden(request, tcpClientSock):
+    request_splited = request.split()
+    http_ver = request_splited[2].split('\r\n')[0]
+    with open('403/403.html', 'rb') as f_html:
+        html = f_html.read()
+    response = http_ver.encode() + b' 200 OK\r\nContent-Type: text/html\r\n\r\n' + html
+
+    tcpClientSock.sendall(response)
