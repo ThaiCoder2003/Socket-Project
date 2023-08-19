@@ -4,8 +4,8 @@ from datetime import datetime
 
 def config():
     config={}
-
-    with open('config/file.conf', 'r') as f:
+    file_path = 'config/file.conf'
+    with open(file_path, 'r') as f:
         data = f.readlines()
     for i in range(len(data)):
         if data[i][-1] == '\n':
@@ -38,6 +38,7 @@ def isWhite(input_str):
     return input_str in whitelist
 
 #Hàm để kiểm tra phương thức
+#GET - POST - HEAD
 def is_valid_method(method):
     if method != 'GET' and method != 'POST' and method != 'HEAD':
         return False
@@ -129,22 +130,27 @@ def load_cache(request, target_host, tcpClientSock):
             return True
     return False
 
+#Error 403
 def check_forbidden(request):
     request_splited = request.split()
     #test phương thức
     method = is_valid_method(request_splited[0])
     #test white list
+    #Lấy đường link
     if request_splited[1][-1] == '/':
         temp = request_splited[1][1:-1]
     else:
         temp = request_splited[1][1:]
+    #Nếu POST thì luôn trong whitelist
     if request_splited[0] == 'POST':
         white = True
+    #Nếu khác POST thì kiểm xem có trong whitelist không
     else:
         white = isWhite(temp)
     #test time
     time = TimeLimit()
 
+    #Request được gửi từ 1 web đã được chấp nhận
     if request.find('same-origin') != -1:
         return True
 
@@ -152,13 +158,16 @@ def check_forbidden(request):
         return True
     return False
 
+#Gửi file 403.html cho trình duyệt
 def send_forbidden(request, tcpClientSock):
+    #Lấy version của HTTP
     request_splited = request.split()
     http_ver = request_splited[2].split('\r\n')[0]
+    #Đọc file HTML
     with open('403/403.html', 'rb') as f_html:
         html = f_html.read()
-    response = http_ver.encode() + b' 200 OK\r\nContent-Type: text/html\r\n\r\n' + html
+    #version (HTTP/ 1.1) + status code (403 Forbidden) + content type: html + file HTML
+    response = http_ver.encode() + b' 403 Forbidden\r\nContent-Type: text/html\r\n\r\n' + html
 
+    #Gửi response cho trình duyệt
     tcpClientSock.sendall(response)
-
-config()

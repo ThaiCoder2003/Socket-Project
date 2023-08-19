@@ -23,6 +23,7 @@ while run:
         
         #Lấy request từ web client
         request_data = tcpCliSock.recv(65536).decode('utf-8')
+        print(f'REQUEST:\n{request_data}')
 
         if not check_forbidden(request_data):
             send_forbidden(request_data, tcpCliSock)
@@ -43,9 +44,10 @@ while run:
                 #lưu cache
                 saveCache(request_data, response_data, target_host)
                 tcpCliSock.send(response_data)
+        print(f'RESPONSE:\n{response_data}')
             
-            target_socket.close()
-            tcpCliSock.close()
+        target_socket.close()
+        tcpCliSock.close()
     except KeyboardInterrupt:
         tcpSerSock.close()
         print('CLOSE')
