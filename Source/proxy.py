@@ -26,12 +26,12 @@ def TimeLimit():
     float=currentDateAndTime.hour+currentDateAndTime.minute/60
     return (float>=config_info['time_in'] and float<=config_info['time_out'])
 
-config_info=config()
+#config_info=config()
 
-cache_time=config_info["cache_time"]
-whitelist=config_info["whitelisting"]
-time_in=config_info["time_in"]
-time_out=config_info["time_out"]
+# cache_time=config_info["cache_time"]
+# whitelist=config_info["whitelisting"]
+# time_in=config_info["time_in"]
+# time_out=config_info["time_out"]
 
 # Hàm kiểm tra whitelist
 def isWhite(input_str):
@@ -171,3 +171,7 @@ def send_forbidden(request, tcpClientSock):
 
     #Gửi response cho trình duyệt
     tcpClientSock.sendall(response)
+
+print(1)
+if os.path.exists('/config'):
+    print(123)
